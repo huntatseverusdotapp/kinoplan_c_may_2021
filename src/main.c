@@ -1,3 +1,7 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -165,7 +169,13 @@ void read_exp_member(int (*condition_f)(unsigned char), unsigned char ch, char**
     ++*symbc;
     if (*symbc > *exp_mem_len - 1) {
         *exp_mem_len += EMLEN;
-        *exp_member_str = (char *) realloc(*exp_member_str, *exp_mem_len * sizeof(char));
+        char * tmp = (char *) realloc(*exp_member_str, *exp_mem_len * sizeof(char));
+        if (tmp == NULL) {
+            free(*exp_member_str);
+            errexit("realoc failed");
+            return;
+        }
+        *exp_member_str = tmp;
     }
     if ((*condition_f)(ch)) {
         (*exp_member_str)[(*symbc)-1] = ch;
@@ -178,10 +188,9 @@ void read_exp_member(int (*condition_f)(unsigned char), unsigned char ch, char**
 
 int process_int32(char* number_str, int32_t *num, char** answer) {
     long int l_number = strtol(number_str, NULL, 10);
-    if (errno == ERANGE) {
-        char *int32_overflow = "INT32 overflow";
-        *answer = (char *) malloc((strlen(int32_overflow)+1)*sizeof(char));
-        strcpy(*answer, int32_overflow);
+    if (errno == ERANGE || l_number < INT32_MIN || l_number > INT32_MAX) {
+        *answer = (char *) malloc((strlen("INT32 overflow")+1)*sizeof(char));
+        strcpy(*answer, "INT32 overflow");
         return 0;
     }
     *num = (int32_t) l_number;
@@ -204,8 +213,8 @@ void readBuf(int desc) {
 
     // Set connection timeout
     struct timeval timeout;
-    // 10 seconds
-    timeout.tv_sec = 10;
+    // 15 seconds
+    timeout.tv_sec = 15;
     timeout.tv_usec = 0;
     if (setsockopt (desc, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout)) < 0) {
         errexit("can't set socket options");
@@ -267,25 +276,38 @@ void readBuf(int desc) {
                         int64_t result;
                         enum e_calculation_result calc_result = performCalculation(exp_members[2], first_number, second_number, &result);
                         if (calc_result == ecrUnknownOperation) {
-                            char * unknown_operation = "unknown operation";
-                            answer = (char *) malloc((strlen(unknown_operation)+1)*sizeof(char));
-                            strcpy(answer, unknown_operation);
+                            answer = (char *) malloc((strlen("unknown operation")+1)*sizeof(char));
+                            if (answer == NULL) {
+                                errexit("malloc failed");
+                                return;
+                            }
+                            strcpy(answer, "unknown operation");
                         } else if (calc_result == ecrArithmeticError) {
-                            char * arithmetic_error = "arithmetic error (are you dividing by zero?)";
-                            answer = (char *) malloc((strlen(arithmetic_error)+1)*sizeof(char));
-                            strcpy(answer, arithmetic_error);
+                            answer = (char *) malloc((strlen("arithmetic error (are you dividing by zero?)")+1)*sizeof(char));
+                            if (answer == NULL) {
+                                errexit("malloc failed");
+                                return;
+                            }
+                            strcpy(answer, "arithmetic error (are you dividing by zero?)");
                         } else if (calc_result == ecrInt32Overflow) {
-                            char *int32_overflow = "INT32 overflow";
-                            answer = (char *) malloc((strlen(int32_overflow)+1)*sizeof(char));
-                            strcpy(answer, int32_overflow);
-                        } else if (calc_result == ecrOk) {
+                            answer = (char *) malloc((strlen("INT32 overflow")+1)*sizeof(char));
+                            if (answer == NULL) {
+                                errexit("malloc failed");
+                                return;
+                            }
+                            strcpy(answer, "INT32 overflow");
+                        } else {
                             char bu[sizeof(char)*(11+1)];
                             i32toa((int32_t)result, bu);
                             answer = (char *) malloc((strlen(bu)+1)*sizeof(char));
+                            if (answer == NULL) {
+                                errexit("malloc failed");
+                                return;
+                            }
                             strcpy(answer, bu);
-                        } else {
-                            errexit("unknown value of type enum e_calculation_result");
-                        }
+                        }// else {
+//                            errexit("unknown value of type enum e_calculation_result");
+//                        }
                     }
                     for (int j=0; j<3; ++j) {
                         free(exp_members[j]);
@@ -303,6 +325,7 @@ void readBuf(int desc) {
 
                     close(desc);
                     desc = -1;
+                    break;
                 }
                 is_ending_sequence = ch == '\r';
                 break;

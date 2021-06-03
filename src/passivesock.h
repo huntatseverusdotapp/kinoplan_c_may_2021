@@ -3,7 +3,7 @@
 
 int passivesock(const char* service, const char* transport, int qlen);
 
-int passiveUDP(const char* service);
+//int passiveUDP(const char* service);
 
 int passiveTCP(const char* service, int qlen);
 

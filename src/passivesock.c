@@ -1,3 +1,7 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+
 #include "passivesock.h"
 
 #include <netdb.h>
@@ -38,9 +42,12 @@ int passivesock(const char* service, const char* transport, int qlen)
 
         errexit("can't get \"%s\" service entry\n", service);
 
-    if ( ( ppe = getprotobyname(transport) ) == 0 )
+    if ( ( ppe = getprotobyname(transport) ) == 0 ) {
 
         errexit("can't get \"%s\" protocol entry\n", transport);
+        return -1;
+
+    }
 
     if ( strcmp(transport, "udp") == 0 )
 
@@ -69,10 +76,10 @@ int passivesock(const char* service, const char* transport, int qlen)
     return s;
 }
 
-int passiveUDP(const char *service)
-{
-    return passivesock(service, "udp", 0);
-}
+//int passiveUDP(const char *service)
+//{
+//    return passivesock(service, "udp", 0);
+//}
 
 int passiveTCP(const char *service, int qlen)
 {
