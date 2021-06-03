@@ -92,30 +92,10 @@ int main(int argc, char *argv[]) {
 	++con_count;
 	pthread_mutex_unlock(&mutex);
 	struct con_arg arg = {.p_mutex = &mutex,.p_socket =
-		&ssock,.p_con_count = &con_count };
+		&ssock,.p_con_count = &con_count
+	};
 	pthread_create(&tid, NULL, &processClient, &arg);
 	pthread_detach(tid);
-/*        switch (fork()) {
-
-        case 0:                     // child process
-
-            close(msock);           // closing main socket at child process
-            int res = TCPsubseqcnt(ssock, bsymb, esymb);
-            shutdown(ssock, SHUT_RDWR);
-            close(ssock);
-            exit(res);
-
-        default:                    // parent process
-
-            close(ssock);           // close working socket at parent process
-            break;
-
-        case -1:
-
-            errexit("fork: %s\n", strerror(errno));
-
-        }
-        */
     }
 
     return 0;
@@ -293,8 +273,7 @@ void readBuf(int desc) {
 					       first_number, second_number,
 					       &result);
 			if (calc_result == ecrUnknownOperation) {
-			    answer =
-				(char *)
+			    answer = (char *)
 				malloc((strlen("unknown operation") +
 					1) * sizeof(char));
 			    if (answer == NULL) {
@@ -303,8 +282,7 @@ void readBuf(int desc) {
 			    }
 			    strcpy(answer, "unknown operation");
 			} else if (calc_result == ecrArithmeticError) {
-			    answer =
-				(char *)
+			    answer = (char *)
 				malloc((strlen
 					("arithmetic error (are you dividing by zero?)")
 					+ 1) * sizeof(char));
@@ -315,8 +293,7 @@ void readBuf(int desc) {
 			    strcpy(answer,
 				   "arithmetic error (are you dividing by zero?)");
 			} else if (calc_result == ecrInt32Overflow) {
-			    answer =
-				(char *)
+			    answer = (char *)
 				malloc((strlen("INT32 overflow") +
 					1) * sizeof(char));
 			    if (answer == NULL) {
